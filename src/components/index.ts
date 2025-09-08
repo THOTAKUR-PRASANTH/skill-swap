@@ -24,16 +24,14 @@ import PricingCards from "./pricing-cards";
 import Blogs from "./blog/blogs";
 
 //clerk forms
-import signin from "./auth/signin"
-import signup from "./auth/signup"
+
 
 
 export {
     SignInForm,
     SignUpForm,
 
-    signin,
-    signup,
+   
 
     Icons,
     MaxWidthWrapper,
