@@ -33,22 +33,28 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
 const isPublicRoute = createRouteMatcher([
-  "/auth/sign-in(.*)",   
-  "/auth/sign-up(.*)",   
-  "/",                   
+  "/auth/sign-in(.*)",
+  "/auth/sign-up(.*)",
+  "/", // public home page
 ]);
 
 export default clerkMiddleware((auth, req) => {
   if (!isPublicRoute(req)) {
-    // Protect everything else
-    auth().protect();
+    try {
+      auth().protect();
+    } catch {
+      // Redirect unauthenticated users to your custom sign-in page
+      const signInUrl = new URL("/auth/sign-in", req.url);
+      signInUrl.searchParams.set("redirect_url", req.nextUrl.pathname);
+      return Response.redirect(signInUrl);
+    }
   }
 });
 
 export const config = {
   matcher: [
-    // Run middleware on all routes except static files and _next
-    "/((?!.*\\..*|_next).*)",
+    "/((?!.*\\..*|_next).*)", // run on all non-static routes
     "/(api|trpc)(.*)",
   ],
 };
+
