@@ -31,6 +31,7 @@
 
 
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import { NextResponse } from "next/server";
 
 const isPublicRoute = createRouteMatcher([
   "/auth/sign-in(.*)",
@@ -40,15 +41,17 @@ const isPublicRoute = createRouteMatcher([
 
 export default clerkMiddleware((auth, req) => {
   if (!isPublicRoute(req)) {
-    try {
-      auth().protect();
-    } catch {
-      // Redirect unauthenticated users to your custom sign-in page
+    const { userId } = auth();
+    if (!userId) {
+      // User is not signed in → redirect to your custom page
       const signInUrl = new URL("/auth/sign-in", req.url);
       signInUrl.searchParams.set("redirect_url", req.nextUrl.pathname);
-      return Response.redirect(signInUrl);
+      return NextResponse.redirect(signInUrl);
     }
   }
+
+  // If public route or user is signed in → continue
+  return NextResponse.next();
 });
 
 export const config = {
@@ -57,4 +60,5 @@ export const config = {
     "/(api|trpc)(.*)",
   ],
 };
+
 
