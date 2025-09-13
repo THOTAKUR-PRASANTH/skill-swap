@@ -1,14 +1,15 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useSignUp } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
-import { LoaderIcon, ArrowLeft } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { OAuthStrategy } from "@clerk/types";
+import { cn } from "@/utils/functions/cn";
 
-// --- SVG Icons (Reused from Sign-In) ---
+// --- SVG Icons ---
 const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" {...props}>
     <path fill="#4285F4" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12s5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24s8.955,20,20,20s20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z" />
@@ -25,15 +26,14 @@ const GithubIcon = (props: React.SVGProps<SVGSVGElement>) => (
   </svg>
 );
 
-// --- UI Components (Reused from Sign-In) ---
+// --- UI Components ---
 const Card: React.FC<{ children: React.ReactNode }> = ({ children }) => (
     <div className="card-animation-container relative w-full max-w-5xl rounded-2xl p-[2px] overflow-hidden shadow-2xl shadow-black/40 bg-black/80 backdrop-blur-lg">
-        <div className="relative z-10 p-6 md:p-12 bg-black rounded-[14px]">
-            {children}
-        </div>
+      <div className="relative z-10 p-6 md:p-12 bg-black rounded-[14px]">
+        {children}
+      </div>
     </div>
 );
-
 
 const Label: React.FC<{ htmlFor: string; children: React.ReactNode }> = ({ htmlFor, children }) => (
   <label htmlFor={htmlFor} className="text-sm font-medium text-gray-200">{children}</label>
@@ -43,14 +43,78 @@ const Input: React.FC<React.InputHTMLAttributes<HTMLInputElement>> = (props) => 
   <input {...props} className={`w-full px-5 py-3 rounded-lg border border-white/10 bg-white/5 text-white placeholder-gray-400 focus:ring-2 focus:ring-purple-500 focus:outline-none transition text-sm ${props.disabled ? "opacity-50 cursor-not-allowed" : ""}`} />
 );
 
-const Button: React.FC<{ children: React.ReactNode; variant?: "default" | "oauth" } & React.ButtonHTMLAttributes<HTMLButtonElement>> = ({ children, variant = "default", ...props }) => {
-  const base = "w-full flex items-center justify-center gap-3 px-6 py-3 rounded-lg font-medium transition active:scale-[0.98] text-sm";
+// --- NEW: Countdown Spinner Component ---
+const CountdownSpinner: React.FC<{ countdown: number }> = ({ countdown }) => {
+    const radius = 18;
+    const circumference = 2 * Math.PI * radius;
+    const progress = (countdown / 40) * circumference;
+  
+    return (
+      <div className="relative w-8 h-8 flex items-center justify-center">
+        <svg className="absolute w-full h-full transform -rotate-90" viewBox="0 0 40 40">
+          <circle
+            cx="20" cy="20" r={radius}
+            className="text-white/10"
+            strokeWidth="3"
+            stroke="currentColor"
+            fill="transparent"
+          />
+          <motion.circle
+            cx="20" cy="20" r={radius}
+            className="text-purple-400"
+            strokeWidth="3"
+            stroke="currentColor"
+            fill="transparent"
+            strokeDasharray={circumference}
+            strokeDashoffset={progress}
+            transition={{ duration: 1, ease: "linear" }}
+            style={{ filter: "drop-shadow(0 0 3px rgba(192, 132, 252, 0.5))" }}
+          />
+        </svg>
+        <span className="text-xs font-semibold text-white z-10">{countdown}</span>
+      </div>
+    );
+};
+
+// --- NEW: Button component with built-in countdown spinner ---
+const Button: React.FC<{ children: React.ReactNode; variant?: "default" | "oauth"; isLoading?: boolean; countdown: number } & React.ButtonHTMLAttributes<HTMLButtonElement>> = ({
+  children,
+  variant = "default",
+  isLoading = false,
+  countdown,
+  ...props
+}) => {
+  const base = "w-full relative flex items-center justify-center gap-3 px-6 py-3 rounded-lg font-medium transition active:scale-[0.98] text-sm overflow-hidden";
   const variants = {
     default: "bg-purple-600 text-white hover:bg-purple-700 shadow-lg shadow-purple-600/20",
     oauth: "bg-white/5 border border-white/10 text-gray-200 hover:bg-white/15 backdrop-blur-sm",
   };
-  return <button {...props} className={`${base} ${variants[variant]} ${props.disabled ? "opacity-50 cursor-not-allowed" : ""}`}>{children}</button>;
+  return (
+    <button {...props} className={cn(base, variants[variant], props.disabled && "opacity-50 cursor-not-allowed")}>
+      <AnimatePresence>
+        {isLoading && (
+          <motion.div
+            key="loader"
+            initial={{ opacity: 0, scale: 0.5 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.5 }}
+            className="absolute inset-0 flex items-center justify-center"
+          >
+            <CountdownSpinner countdown={countdown} />
+          </motion.div>
+        )}
+      </AnimatePresence>
+      <motion.div
+        animate={{ opacity: isLoading ? 0 : 1 }}
+        transition={{ duration: 0.2 }}
+        className="flex items-center gap-3"
+      >
+        {children}
+      </motion.div>
+    </button>
+  );
 };
+
 
 // --- Main Sign-Up Component ---
 const CustomSignUpPage = () => {
@@ -61,7 +125,27 @@ const CustomSignUpPage = () => {
   const [password, setPassword] = useState("");
   const [pendingVerification, setPendingVerification] = useState(false);
   const [code, setCode] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const [loadingProvider, setLoadingProvider] = useState<string | null>(null);
+  const [countdown, setCountdown] = useState(40);
+
+  // --- NEW: Countdown timer logic ---
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (loadingProvider) {
+      setCountdown(40); // Reset countdown
+      timer = setInterval(() => {
+        setCountdown(prev => {
+          if (prev <= 1) {
+            clearInterval(timer);
+            // Optionally handle timeout here
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [loadingProvider]);
 
   const handleSignUp = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -71,7 +155,7 @@ const CustomSignUpPage = () => {
         return;
     }
 
-    setIsLoading(true);
+    setLoadingProvider("password");
     try {
       await signUp.create({ emailAddress, password });
       await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
@@ -80,12 +164,12 @@ const CustomSignUpPage = () => {
     } catch (err: any) {
       const errorCode = err?.errors?.[0]?.code;
       if (errorCode === "form_identifier_exists") {
-        toast.error("This email is already registered. Please sign in.");
+        toast.error("This email is already registered.");
       } else {
         toast.error("Something went wrong. Please try again.");
       }
     } finally {
-      setIsLoading(false);
+      setLoadingProvider(null);
     }
   };
 
@@ -93,24 +177,24 @@ const CustomSignUpPage = () => {
     e.preventDefault();
     if (!isLoaded) return;
 
-    setIsLoading(true);
+    setLoadingProvider("verification");
     try {
       const completeSignUp = await signUp.attemptEmailAddressVerification({ code });
       if (completeSignUp.status === "complete") {
         await setActive({ session: completeSignUp.createdSessionId });
         router.push("/dashboard");
-      } else {
-        console.error(JSON.stringify(completeSignUp, null, 2));
       }
-    } catch (err: any) {
-      toast.error(err.errors?.[0]?.longMessage || "Invalid verification code. Please try again.");
+    } catch (err: any)
+{
+      toast.error(err.errors?.[0]?.longMessage || "Invalid verification code.");
     } finally {
-      setIsLoading(false);
+      setLoadingProvider(null);
     }
   };
 
   const handleOAuthSignUp = async (provider: OAuthStrategy) => {
     if (!isLoaded) return;
+    setLoadingProvider(provider);
     try {
       await signUp.authenticateWithRedirect({
         strategy: provider,
@@ -119,41 +203,12 @@ const CustomSignUpPage = () => {
       });
     } catch (err) {
       toast.error("OAuth sign up failed. Try again.");
+      setLoadingProvider(null);
     }
   };
 
   return (
     <>
-      <style>{`
-        .card-animation-container::before,
-        .card-animation-container::after {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: conic-gradient(
-                transparent,
-                rgba(255, 255, 255, 0.3),
-                transparent 15%
-            );
-            animation: rotate-border 8s linear infinite;
-        }
-
-        .card-animation-container::after {
-            animation-delay: -4s; /* Half duration delay for diagonal effect */
-        }
-
-        @keyframes rotate-border {
-            from {
-                transform: rotate(0deg);
-            }
-            to {
-                transform: rotate(360deg);
-            }
-        }
-      `}</style>
       <div className="fixed inset-0 flex items-center justify-center p-4 z-50 bg-black/50">
         <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ duration: 0.4, ease: "easeOut" }}>
           <Card>
@@ -162,17 +217,15 @@ const CustomSignUpPage = () => {
             </button>
             
             <div className="grid md:grid-cols-2 gap-8 md:gap-16 items-center">
-              {/* Left Column */}
               <div className="hidden md:flex flex-col justify-center">
-                 <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">{pendingVerification ? "Check Your Email" : "Create Your Account"}</h2>
-                 <p className="text-gray-300">
-                    {pendingVerification
-                      ? "We've sent a six-digit verification code to your email. Enter it to secure your account."
-                      : "Join us today! It only takes a minute to set up your account and unlock all the features."}
-                 </p>
+                   <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">{pendingVerification ? "Check Your Email" : "Create Your Account"}</h2>
+                   <p className="text-gray-300">
+                     {pendingVerification
+                       ? "We've sent a six-digit verification code to your email. Enter it to secure your account."
+                       : "Join us today! It only takes a minute to set up your account and unlock all the features."}
+                   </p>
               </div>
 
-              {/* Right Column */}
               <div className="pt-12 md:pt-0">
                 {!pendingVerification ? (
                   <>
@@ -180,13 +233,13 @@ const CustomSignUpPage = () => {
                     <form onSubmit={handleSignUp} className="space-y-5">
                       <div className="space-y-1">
                         <Label htmlFor="email">Email</Label>
-                        <Input id="email" type="email" value={emailAddress} disabled={isLoading} onChange={(e) => setEmailAddress(e.target.value)} placeholder="you@example.com" />
+                        <Input id="email" type="email" value={emailAddress} disabled={!!loadingProvider} onChange={(e) => setEmailAddress(e.target.value)} placeholder="you@example.com" />
                       </div>
                       <div className="space-y-1">
                         <Label htmlFor="password">Password</Label>
-                        <Input id="password" type="password" value={password} disabled={isLoading} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" />
+                        <Input id="password" type="password" value={password} disabled={!!loadingProvider} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" />
                       </div>
-                      <Button type="submit" disabled={isLoading}>{isLoading ? <LoaderIcon className="animate-spin" /> : "Continue"}</Button>
+                      <Button type="submit" disabled={!!loadingProvider} isLoading={loadingProvider === 'password'} countdown={countdown}>Continue</Button>
                     </form>
                   </>
                 ) : (
@@ -195,9 +248,9 @@ const CustomSignUpPage = () => {
                     <form onSubmit={handleVerification} className="space-y-5">
                       <div className="space-y-1">
                         <Label htmlFor="code">Verification Code</Label>
-                        <Input id="code" type="text" value={code} disabled={isLoading} onChange={(e) => setCode(e.target.value)} placeholder="123456" />
+                        <Input id="code" type="text" value={code} disabled={!!loadingProvider} onChange={(e) => setCode(e.target.value)} placeholder="123456" />
                       </div>
-                      <Button type="submit" disabled={isLoading}>{isLoading ? <LoaderIcon className="animate-spin" /> : "Verify and Sign Up"}</Button>
+                      <Button type="submit" disabled={!!loadingProvider} isLoading={loadingProvider === 'verification'} countdown={countdown}>Verify and Sign Up</Button>
                     </form>
                   </>
                 )}
@@ -209,8 +262,8 @@ const CustomSignUpPage = () => {
                 </div>
                 
                 <div className="flex flex-col gap-3">
-                  <Button variant="oauth" onClick={() => handleOAuthSignUp("oauth_google")} disabled={isLoading}><GoogleIcon className="w-5 h-5" /><span>Continue with Google</span></Button>
-                  <Button variant="oauth" onClick={() => handleOAuthSignUp("oauth_github")} disabled={isLoading}><GithubIcon className="w-5 h-5 text-white" /><span>Continue with GitHub</span></Button>
+                  <Button variant="oauth" onClick={() => handleOAuthSignUp("oauth_google")} disabled={!!loadingProvider} isLoading={loadingProvider === 'oauth_google'} countdown={countdown}><GoogleIcon className="w-5 h-5" /><span>Continue with Google</span></Button>
+                  <Button variant="oauth" onClick={() => handleOAuthSignUp("oauth_github")} disabled={!!loadingProvider} isLoading={loadingProvider === 'oauth_github'} countdown={countdown}><GithubIcon className="w-5 h-5 text-white" /><span>Continue with GitHub</span></Button>
                 </div>
 
                 <p className="text-xs text-center text-gray-400 mt-6">

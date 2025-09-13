@@ -14,8 +14,11 @@ import Footer from "./navigation/footer";
 import Providers from "./providers/providers";
 
 // dashboard
-import Sidebar from "./dashboard/sidebar";
+
 import DashboardNavbar from "./dashboard/dashboard-navbar";
+import DesktopSidebar from "./dashboard/desktop_sidebar";
+import DashboardShell from "./dashboard/dashboard-shell";
+import {SearchCommandMenu} from "./dashboard/SearchCommandMenu";
 
 // pricing
 import PricingCards from "./pricing-cards";
@@ -23,7 +26,8 @@ import PricingCards from "./pricing-cards";
 // blog
 import Blogs from "./blog/blogs";
 
-//clerk forms
+
+
 
 
 
@@ -41,8 +45,10 @@ export {
 
     Providers,
 
-    Sidebar,
     DashboardNavbar,
+    DesktopSidebar,
+    DashboardShell,
+    SearchCommandMenu,
 
     PricingCards,
 

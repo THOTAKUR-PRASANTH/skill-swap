@@ -36,7 +36,9 @@ import { NextResponse } from "next/server";
 const isPublicRoute = createRouteMatcher([
   "/auth/sign-in(.*)",
   "/auth/sign-up(.*)",
-  "/", // public home page
+  "/",
+  "/api/webhooks/clerk",
+  
 ]);
 
 export default clerkMiddleware((auth, req) => {

@@ -3,10 +3,11 @@
 import React, { useState } from "react";
 import { useSignIn } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { Eye, EyeOff, LoaderIcon, ArrowLeft } from "lucide-react";
 import { OAuthStrategy } from "@clerk/types";
+import { cn } from "@/utils/functions/cn";
 
 // --- SVG Icons ---
 const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -28,9 +29,9 @@ const GithubIcon = (props: React.SVGProps<SVGSVGElement>) => (
 // --- Card Component ---
 const Card: React.FC<{ children: React.ReactNode }> = ({ children }) => (
     <div className="card-animation-container relative w-full max-w-5xl rounded-2xl p-[2px] overflow-hidden shadow-2xl shadow-black/40 bg-black/80 backdrop-blur-lg">
-        <div className="relative z-10 p-6 md:p-12 bg-black rounded-[14px]">
-            {children}
-        </div>
+      <div className="relative z-10 p-6 md:p-12 bg-black rounded-[14px]">
+        {children}
+      </div>
     </div>
 );
 
@@ -49,22 +50,44 @@ const Input: React.FC<React.InputHTMLAttributes<HTMLInputElement>> = (props) => 
   />
 );
 
-const Button: React.FC<{ children: React.ReactNode; variant?: "default" | "oauth" } & React.ButtonHTMLAttributes<HTMLButtonElement>> = ({
+// --- NEW: Button component with built-in glowing spinner loader ---
+const Button: React.FC<{ children: React.ReactNode; variant?: "default" | "oauth"; isLoading?: boolean } & React.ButtonHTMLAttributes<HTMLButtonElement>> = ({
   children,
   variant = "default",
+  isLoading = false,
   ...props
 }) => {
-  const base = "w-full flex items-center justify-center gap-3 px-6 py-3 rounded-lg font-medium transition active:scale-[0.98] text-sm";
+  const base = "w-full relative flex items-center justify-center gap-3 px-6 py-3 rounded-lg font-medium transition active:scale-[0.98] text-sm overflow-hidden";
   const variants = {
     default: "bg-purple-600 text-white hover:bg-purple-700 shadow-lg shadow-purple-600/20",
     oauth: "bg-white/5 border border-white/10 text-gray-200 hover:bg-white/15 backdrop-blur-sm",
   };
   return (
-    <button {...props} className={`${base} ${variants[variant]} ${props.disabled ? "opacity-50 cursor-not-allowed" : ""}`}>
-      {children}
+    <button {...props} className={cn(base, variants[variant], props.disabled && "opacity-50 cursor-not-allowed")}>
+      <AnimatePresence>
+        {isLoading && (
+          <motion.div
+            key="loader"
+            initial={{ opacity: 0, scale: 0.5 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.5 }}
+            className="absolute inset-0 flex items-center justify-center"
+          >
+            <div className="w-5 h-5 border-2 border-transparent border-t-purple-300 rounded-full animate-spin shadow-[0_0_8px_rgba(192,132,252,0.5)]" />
+          </motion.div>
+        )}
+      </AnimatePresence>
+      <motion.div
+        animate={{ opacity: isLoading ? 0 : 1 }}
+        transition={{ duration: 0.2 }}
+        className="flex items-center gap-3"
+      >
+        {children}
+      </motion.div>
     </button>
   );
 };
+
 
 // --- Main Modal ---
 const CustomSignInModal = () => {
@@ -74,7 +97,7 @@ const CustomSignInModal = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [loadingProvider, setLoadingProvider] = useState<string | null>(null);
 
   const handleSignIn = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -84,14 +107,12 @@ const CustomSignInModal = () => {
       return;
     }
 
-    setIsLoading(true);
+    setLoadingProvider("password");
     try {
       const signInAttempt = await signIn.create({ identifier: email, password });
       if (signInAttempt.status === "complete") {
         await setActive({ session: signInAttempt.createdSessionId });
         router.push("/dashboard");
-      } else {
-        toast.error("Invalid email or password");
       }
     } catch (error: any) {
       const errorCode = error?.errors?.[0]?.code;
@@ -102,20 +123,18 @@ const CustomSignInModal = () => {
         case "form_password_incorrect":
           toast.error("Incorrect password. Please try again.");
           break;
-        case "too_many_attempts":
-          toast.error("Too many attempts. Try again later.");
-          break;
         default:
-          toast.error("Something went wrong. Please try again.");
+          toast.error("Invalid email or password. Please try again.");
           break;
       }
     } finally {
-      setIsLoading(false);
+      setLoadingProvider(null);
     }
   };
 
   const handleOAuthSignIn = async (provider: OAuthStrategy) => {
     if (!isLoaded) return;
+    setLoadingProvider(provider);
     try {
       await signIn.authenticateWithRedirect({
         strategy: provider,
@@ -124,39 +143,28 @@ const CustomSignInModal = () => {
       });
     } catch (err) {
       toast.error("OAuth sign in failed. Try again.");
+      setLoadingProvider(null);
     }
   };
 
   return (
     <>
-        <style>{`
+      <style jsx global>{`
         .card-animation-container::before,
         .card-animation-container::after {
             content: '';
             position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: conic-gradient(
-                transparent,
-                rgba(255, 255, 255, 0.3),
-                transparent 15%
-            );
+            top: -50%; left: -50%;
+            width: 200%; height: 200%;
+            background: conic-gradient(transparent, rgba(255, 255, 255, 0.3), transparent 15%);
             animation: rotate-border 8s linear infinite;
         }
-
         .card-animation-container::after {
-            animation-delay: -4s; /* Half duration delay for diagonal effect */
+            animation-delay: -4s;
         }
-
         @keyframes rotate-border {
-            from {
-                transform: rotate(0deg);
-            }
-            to {
-                transform: rotate(360deg);
-            }
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
         }
       `}</style>
       <div className="fixed inset-0 flex items-center justify-center p-4 z-50 bg-black/50">
@@ -170,21 +178,19 @@ const CustomSignInModal = () => {
             </button>
             
             <div className="grid md:grid-cols-2 gap-8 md:gap-16 items-center">
-              {/* Left Column: Welcome Text */}
               <div className="hidden md:flex flex-col justify-center">
-                 <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Welcome Back 👋</h2>
-                 <p className="text-gray-300">
-                   Sign in to access your dashboard, manage your account, and explore all the features we have to offer.
-                 </p>
+                   <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Welcome Back 👋</h2>
+                   <p className="text-gray-300">
+                     Sign in to access your dashboard, manage your account, and explore all the features we have to offer.
+                   </p>
               </div>
 
-              {/* Right Column: Form */}
               <div className="pt-12 md:pt-0">
                 <h2 className="text-3xl font-bold text-white text-center mb-6 md:hidden">Welcome Back 👋</h2>
                 <form onSubmit={handleSignIn} className="space-y-5">
                   <div className="space-y-1">
                     <Label htmlFor="email">Email</Label>
-                    <Input id="email" type="email" value={email} disabled={!isLoaded || isLoading} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" />
+                    <Input id="email" type="email" value={email} disabled={!!loadingProvider} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" />
                   </div>
 
                   <div className="space-y-1">
@@ -194,18 +200,18 @@ const CustomSignInModal = () => {
                         id="password"
                         type={showPassword ? "text" : "password"}
                         value={password}
-                        disabled={!isLoaded || isLoading}
+                        disabled={!!loadingProvider}
                         onChange={(e) => setPassword(e.target.value)}
                         placeholder="••••••••"
                       />
-                      <button type="button" disabled={!isLoaded || isLoading} onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-4 flex items-center text-gray-400 hover:text-white">
+                      <button type="button" disabled={!!loadingProvider} onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-4 flex items-center text-gray-400 hover:text-white">
                         {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                       </button>
                     </div>
                   </div>
 
-                  <Button type="submit" disabled={isLoading || !isLoaded}>
-                    {isLoading ? <LoaderIcon className="w-5 h-5 animate-spin" /> : "Sign In"}
+                  <Button type="submit" disabled={!!loadingProvider} isLoading={loadingProvider === 'password'}>
+                    Sign In
                   </Button>
                 </form>
 
@@ -216,11 +222,11 @@ const CustomSignInModal = () => {
                 </div>
 
                 <div className="flex flex-col gap-3">
-                  <Button variant="oauth" onClick={() => handleOAuthSignIn("oauth_google")} disabled={!isLoaded || isLoading}>
+                  <Button variant="oauth" onClick={() => handleOAuthSignIn("oauth_google")} disabled={!!loadingProvider} isLoading={loadingProvider === 'oauth_google'}>
                     <GoogleIcon className="w-5 h-5" />
                     <span>Continue with Google</span>
                   </Button>
-                  <Button variant="oauth" onClick={() => handleOAuthSignIn("oauth_github")} disabled={!isLoaded || isLoading}>
+                  <Button variant="oauth" onClick={() => handleOAuthSignIn("oauth_github")} disabled={!!loadingProvider} isLoading={loadingProvider === 'oauth_github'}>
                     <GithubIcon className="w-5 h-5 text-white" />
                     <span>Continue with GitHub</span>
                   </Button>
@@ -239,3 +245,4 @@ const CustomSignInModal = () => {
 };
 
 export default CustomSignInModal;
+
