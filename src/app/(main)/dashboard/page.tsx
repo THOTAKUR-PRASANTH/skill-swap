@@ -46,7 +46,7 @@ export default function DashboardPage() {
           <h1 className="text-4xl font-extrabold text-white mb-2">Dashboard</h1>
           <p className="text-gray-300 text-lg">
             {/* --- Corrected the date --- */}
-            Welcome back, {user?.firstName || "..."}! It's Saturday, September 13th.
+            Welcome back, {user?.firstName || "..."}! It s Saturday, September 13th.
           </p>
         </div>
 
