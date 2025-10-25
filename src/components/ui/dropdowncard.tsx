@@ -18,6 +18,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { signOut } from 'next-auth/react';
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 
 // --- Reusable Glowing Sparkle using the Sparkles Icon ---
 const Sparkle = ({
@@ -150,7 +151,7 @@ export default function DropdownCard(props: {
   const router = useRouter();
   const { profileMenuOpen, user } = props;
 
-  const safeUser = user;
+  const userr = useSession().data?.user
 
   const backendData = {
     rating: 4.7,
@@ -222,10 +223,10 @@ export default function DropdownCard(props: {
 
             <div className="mt-4">
               <h2 className="text-xl font-bold text-neutral-50">
-                {safeUser.firstName + " " + safeUser.lastName}
+                {userr?.name }
               </h2>
               <p className="text-xs text-neutral-400 mt-1">
-                {safeUser.email}
+                {userr?.email}
               </p>
             </div>
 

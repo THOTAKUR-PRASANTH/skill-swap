@@ -171,9 +171,25 @@ const CustomSignInModal = () => {
           
             <div className="grid md:grid-cols-2 gap-8 md:gap-16 items-center">
               {/* --- DESKTOP LOTTIE COLUMN --- */}
-              <div className="hidden md:flex flex-col justify-center">
-                <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-                  {showMfaStep ? "Enter 2FA Code 🔑" : "Welcome Back 👋"}
+              <div className="md:flex flex-col justify-center">
+                <h2 className="text-3xl md:text-4xl font-bold text-white -mt-100">
+                  {showMfaStep ? "Enter 2FA Code 🔑" : (
+                                        <div className="flex flex-col items-center ">
+                                        <motion.div
+                                          className="flex justify-center" 
+                                          initial={{ opacity: 0, scale: 0.8 }}
+                                          animate={{ opacity: 1, scale: 1 }}
+                                          transition={{ duration: 0.8, ease: "easeOut" }}
+                                        >
+                                      <Player
+                                        autoplay
+                                        loop
+                                        src="/animations/welcome.json"
+                                        style={{ width: '150px', height: '150px' }}
+                                      />
+                                    </motion.div>
+                                </div>
+                  )}
                 </h2>
                 <p className="text-gray-300">
                   {showMfaStep
@@ -198,9 +214,26 @@ const CustomSignInModal = () => {
 
               {/* --- FORM COLUMN (Mobile + Desktop) --- */}
               <div className="md:pt-0">
-                <h2 className="text-3xl font-bold text-white text-center mb-6 md:hidden">
-                  {showMfaStep ? "Enter 2FA Code 🔑" : "Welcome Back 👋"}
-                </h2>
+  <h2 className="text-3xl font-bold text-white text-center mb-6 md:hidden">
+    {showMfaStep ? "Enter 2FA Code 🔑" : (
+    
+        <motion.div
+          className="md:hidden flex justify-center"
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+        >
+          <Player
+            autoplay
+            loop
+            src="/animations/welcome.json"
+            
+            style={{ width: '150px', height: '150px' }} 
+          />
+        </motion.div>
+
+    )}
+  </h2>
                 
                 {/* --- NEW: MOBILE LOTTIE --- */}
                 {!showMfaStep && (
