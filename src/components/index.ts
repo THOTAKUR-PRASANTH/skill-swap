@@ -26,6 +26,9 @@ import PricingCards from "./pricing-cards";
 // blog
 import Blogs from "./blog/blogs";
 
+import AuthProvider from "./auth/AuthProvider";
+import MfaSetup from "./auth/MfaSetup";
+
 
 
 
@@ -35,7 +38,8 @@ export {
     SignInForm,
     SignUpForm,
 
-   
+   AuthProvider,
+   MfaSetup,
 
     Icons,
     MaxWidthWrapper,

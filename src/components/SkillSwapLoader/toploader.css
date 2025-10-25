@@ -1,0 +1,35 @@
+/* Keyframes for a smooth, pulsing peg animation */
+@keyframes smooth-pulse-comet {
+  0% {
+    box-shadow: 0 0 10px 2px #e879f9, 0 0 5px 1px #fff;
+    opacity: 1;
+  }
+  50% {
+    box-shadow: 0 0 20px 5px #e879f9, 0 0 10px 2px #fff;
+    opacity: 1;
+  }
+  100% {
+    box-shadow: 0 0 10px 2px #e879f9, 0 0 5px 1px #fff;
+    opacity: 1;
+  }
+}
+
+/* Peg (the comet) */
+#nprogress .peg {
+  display: block !important;
+  background: #fff !important;
+  width: 6px !important;
+  height: 100% !important;
+  box-shadow: none !important;
+  animation: smooth-pulse-comet 1.2s ease-in-out infinite;
+}
+
+/* Bar height */
+#nprogress .bar {
+  height: 4px !important;
+}
+
+/* Optional: smooth fade-out when done */
+#nprogress .bar {
+  transition: width 0.3s ease, opacity 0.3s ease;
+}

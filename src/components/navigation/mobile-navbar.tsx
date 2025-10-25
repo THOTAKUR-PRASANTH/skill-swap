@@ -7,6 +7,7 @@ import {
     AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { useSession } from "next-auth/react";
 import {
     Sheet,
     SheetClose,
@@ -14,14 +15,15 @@ import {
     SheetTrigger
 } from "@/components/ui/sheet";
 import { cn, NAV_LINKS } from "@/utils";
-import { useAuth } from "@clerk/nextjs";
+
 import { LucideIcon, Menu, X } from "lucide-react";
 import Link from "next/link";
 import React, { useState } from 'react';
 
 const MobileNavbar = () => {
 
-    const { isSignedIn, signOut } = useAuth();
+    const  isSignedIn  = useSession().data?.user !== undefined;
+    
 
     const [isOpen, setIsOpen] = useState<boolean>(false);
 

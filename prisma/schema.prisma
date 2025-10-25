@@ -3,23 +3,78 @@ generator client {
 }
 
 datasource db {
-  provider     = "cockroachdb"
-  url          = "postgresql://dora:DxYxEhCoyuzPsa0OmRdW0A@memorybank-15438.j77.aws-ap-south-1.cockroachlabs.cloud:26257/defaultdb?sslmode=verify-full"
-
-  relationMode = "prisma"
+  provider = "cockroachdb"
+  url      = env("DATABASE_URL")
 }
 
+enum crdb_internal_region {
+  aws_ap_south_1 @map("aws-ap-south-1")
+}
+
+
+// Stores core user information
+
 model User {
-  id               String   @id @default(cuid()) // internal DB id
-  clerkId          String   @unique              // Clerk's user.id
-  externalId       String?  
-  firstName        String?
-  lastName         String?
-  email            String   @unique
-  phoneNumber      String?
-  profileImageUrl  String?
-  twoFactorEnabled Boolean  @default(false)
-  passwordEnabled  Boolean  @default(true)
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  id               String    @id @default(cuid())
+  name             String?
+  email            String?   @unique
+  emailVerified    DateTime?
+  image            String?
+  hashedPassword   String?
+  
+
+  mfaSecret        String?   @unique // Stores the secret key for the authenticator app
+  mfaEnabled       Boolean   @default(false) // Tracks if MFA is active for the user
+
+  accounts         Account[]
+  sessions         Session[]
+  PushSubscription PushSubscription[]
+}
+
+// Stores linked accounts from OAuth providers (Google, GitHub)
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.String
+  access_token      String? @db.String
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.String
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+// Stores user sessions for NextAuth
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// Stores tokens for email verification and password reset
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// Stores push notification subscriptions for each user
+model PushSubscription {
+  id     String @id @default(cuid())
+  endpoint String @unique
+  p256dh String
+  auth   String
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

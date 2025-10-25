@@ -1,15 +1,18 @@
 "use client";
 
-import React, { useState } from "react";
-import { useSignIn } from "@clerk/nextjs";
+import { useState } from "react";
+import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
-import { Eye, EyeOff, LoaderIcon, ArrowLeft } from "lucide-react";
-import { OAuthStrategy } from "@clerk/types";
+import { Eye, EyeOff, ArrowLeft } from "lucide-react";
 import { cn } from "@/utils/functions/cn";
+// MODIFICATION: Removed useMemo, as we'll use two different sizes
+// import { useMemo } from "react"; 
+import { Player } from '@lottiefiles/react-lottie-player';
 
-// --- SVG Icons ---
+// --- SVG Icons (GoogleIcon, GithubIcon) ---
+// (Your icon components are unchanged and correct)
 const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="24px" height="24px" {...props}>
     <path fill="#4285F4" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12s5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24s8.955,20,20,20s20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z" />
@@ -28,19 +31,21 @@ const GithubIcon = (props: React.SVGProps<SVGSVGElement>) => (
 
 // --- Card Component ---
 const Card: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-    <div className="card-animation-container relative w-full max-w-5xl rounded-2xl p-[2px] overflow-hidden shadow-2xl shadow-black/40 bg-black/80 backdrop-blur-lg">
-      <div className="relative z-10 p-6 md:p-12 bg-black rounded-[14px]">
-        {children}
-      </div>
+  <div className="card-animation-container relative w-full max-w-5xl rounded-2xl p-[2px] overflow-hidden shadow-2xl shadow-black/40 bg-black/80 backdrop-blur-lg">
+    <div className="relative z-10 p-6 md:p-12 bg-black rounded-[14px]">
+      {children}
     </div>
+  </div>
 );
 
+// --- Label Component ---
 const Label: React.FC<{ htmlFor: string; children: React.ReactNode }> = ({ htmlFor, children }) => (
   <label htmlFor={htmlFor} className="text-sm font-medium text-gray-200">
     {children}
   </label>
 );
 
+// --- Input Component ---
 const Input: React.FC<React.InputHTMLAttributes<HTMLInputElement>> = (props) => (
   <input
     {...props}
@@ -50,7 +55,7 @@ const Input: React.FC<React.InputHTMLAttributes<HTMLInputElement>> = (props) => 
   />
 );
 
-// --- NEW: Button component with built-in glowing spinner loader ---
+// --- Button component ---
 const Button: React.FC<{ children: React.ReactNode; variant?: "default" | "oauth"; isLoading?: boolean } & React.ButtonHTMLAttributes<HTMLButtonElement>> = ({
   children,
   variant = "default",
@@ -88,61 +93,52 @@ const Button: React.FC<{ children: React.ReactNode; variant?: "default" | "oauth
   );
 };
 
-
 // --- Main Modal ---
 const CustomSignInModal = () => {
   const router = useRouter();
-  const { isLoaded, signIn, setActive } = useSignIn();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [mfaToken, setMfaToken] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [showMfaStep, setShowMfaStep] = useState(false);
   const [loadingProvider, setLoadingProvider] = useState<string | null>(null);
+  
+  // MODIFICATION: Removed the useMemo'd LottiePlayer variable
+  // const LottiePlayer = useMemo(...)
 
-  const handleSignIn = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleCredentialsSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isLoaded) return;
-    if (!email || !password) {
-      toast.error("Email and password are required!");
-      return;
-    }
-
     setLoadingProvider("password");
-    try {
-      const signInAttempt = await signIn.create({ identifier: email, password });
-      if (signInAttempt.status === "complete") {
-        await setActive({ session: signInAttempt.createdSessionId });
-        router.push("/dashboard");
+
+    const result = await signIn("credentials", {
+      redirect: false,
+      email,
+      password,
+      mfaToken,
+    });
+
+    if (result?.error) {
+      if (result.error === "MFA") {
+        setShowMfaStep(true);
+      } else if (result.error === "OAuthAccount") {
+        toast.error("This account was created using a social provider. Please sign in with Google or GitHub.");
+      } else {
+        toast.error("Invalid credentials. Please try again.");
       }
-    } catch (error: any) {
-      const errorCode = error?.errors?.[0]?.code;
-      switch (errorCode) {
-        case "form_identifier_not_found":
-          toast.error("This email is not registered. Please sign up first.");
-          break;
-        case "form_password_incorrect":
-          toast.error("Incorrect password. Please try again.");
-          break;
-        default:
-          toast.error("Invalid email or password. Please try again.");
-          break;
-      }
-    } finally {
-      setLoadingProvider(null);
+    } else {
+      router.push("/dashboard");
     }
+    setLoadingProvider(null);
   };
 
-  const handleOAuthSignIn = async (provider: OAuthStrategy) => {
-    if (!isLoaded) return;
+  const handleSocialLogin = async (provider: string) => {
     setLoadingProvider(provider);
     try {
-      await signIn.authenticateWithRedirect({
-        strategy: provider,
-        redirectUrl: "/sso-callback",
-        redirectUrlComplete: "/dashboard",
-      });
-    } catch (err) {
+      await signIn(provider, { callbackUrl: "/dashboard" });
+    } catch {
       toast.error("OAuth sign in failed. Try again.");
+    } finally {
       setLoadingProvider(null);
     }
   };
@@ -152,89 +148,155 @@ const CustomSignInModal = () => {
       <style jsx global>{`
         .card-animation-container::before,
         .card-animation-container::after {
-            content: '';
-            position: absolute;
-            top: -50%; left: -50%;
-            width: 200%; height: 200%;
-            background: conic-gradient(transparent, rgba(255, 255, 255, 0.3), transparent 15%);
-            animation: rotate-border 8s linear infinite;
+          content: '';
+          position: absolute;
+          top: -50%; left: -50%;
+          width: 200%; height: 200%;
+          background: conic-gradient(transparent, rgba(255, 255, 255, 0.3), transparent 15%);
+          animation: rotate-border 8s linear infinite;
         }
         .card-animation-container::after {
-            animation-delay: -4s;
+          animation-delay: -4s;
         }
         @keyframes rotate-border {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
         }
       `}</style>
-      <div className="fixed inset-0 flex items-center justify-center p-4 z-50 bg-black/50">
+      
+      {/* This outer div ALREADY handles scrolling from the last update */}
+      <div className="fixed inset-0 z-50 overflow-y-auto p-4 flex items-start md:items-center justify-center min-h-screen bg-black/50">
         <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ duration: 0.4, ease: "easeOut" }}>
           <Card>
-            <button
-              onClick={() => router.back()}
-              className="absolute top-6 left-6 flex items-center gap-2 text-sm text-gray-400 hover:text-white transition z-20"
-            >
-              <ArrowLeft className="w-4 h-4" /> Back
-            </button>
-            
+          
             <div className="grid md:grid-cols-2 gap-8 md:gap-16 items-center">
+              {/* --- DESKTOP LOTTIE COLUMN --- */}
               <div className="hidden md:flex flex-col justify-center">
-                   <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Welcome Back 👋</h2>
-                   <p className="text-gray-300">
-                     Sign in to access your dashboard, manage your account, and explore all the features we have to offer.
-                   </p>
+                <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+                  {showMfaStep ? "Enter 2FA Code 🔑" : "Welcome Back 👋"}
+                </h2>
+                <p className="text-gray-300">
+                  {showMfaStep
+                    ? "Enter the 6-digit authentication code from your app."
+                    : 
+                      <motion.div
+                          initial={{ opacity: 0, scale: 0.8 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{ duration: 0.8, ease: "easeOut" }}
+                        >
+                          {/* MODIFICATION: Inlined desktop Lottie player */}
+                          <Player 
+                            autoplay 
+                            loop 
+                            src="/animations/register.json" 
+                            style={{ width: '450px', height: '450px' }} 
+                          />
+                      </motion.div>
+                      }
+                </p>
               </div>
 
-              <div className="pt-12 md:pt-0">
-                <h2 className="text-3xl font-bold text-white text-center mb-6 md:hidden">Welcome Back 👋</h2>
-                <form onSubmit={handleSignIn} className="space-y-5">
-                  <div className="space-y-1">
-                    <Label htmlFor="email">Email</Label>
-                    <Input id="email" type="email" value={email} disabled={!!loadingProvider} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" />
-                  </div>
+              {/* --- FORM COLUMN (Mobile + Desktop) --- */}
+              <div className="md:pt-0">
+                <h2 className="text-3xl font-bold text-white text-center mb-6 md:hidden">
+                  {showMfaStep ? "Enter 2FA Code 🔑" : "Welcome Back 👋"}
+                </h2>
+                
+                {/* --- NEW: MOBILE LOTTIE --- */}
+                {!showMfaStep && (
+                  <motion.div
+                    className="md:hidden flex justify-center -mt-4 mb-4" // Only shows on mobile
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.8, ease: "easeOut" }}
+                  >
+                    <Player
+                      autoplay
+                      loop
+                      src="/animations/register.json"
+                      style={{ width: '300px', height: '300px' }} // Smaller size
+                    />
+                  </motion.div>
+                )}
+                {/* --- END NEW BLOCK --- */}
 
-                  <div className="space-y-1">
-                    <Label htmlFor="password">Password</Label>
-                    <div className="relative">
+
+                <form onSubmit={handleCredentialsSubmit} className="space-y-5">
+                  {!showMfaStep ? (
+                    <>
+                      <div className="space-y-1">
+                        <Label htmlFor="email">Email</Label>
+                        <Input id="email" type="email" value={email} disabled={!!loadingProvider} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" />
+                      </div>
+
+                      <div className="space-y-1">
+                        <Label htmlFor="password">Password</Label>
+                        <div className="relative">
+                          <Input
+                            id="password"
+                            type={showPassword ? "text" : "password"}
+                            value={password}
+                            disabled={!!loadingProvider}
+                            onChange={(e) => setPassword(e.target.value)}
+                            placeholder="••••••••"
+                          />
+                          <button
+                            type="button"
+                            disabled={!!loadingProvider}
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute inset-y-0 right-4 flex items-center text-gray-400 hover:text-white"
+                          >
+                            {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                          </button>
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="space-y-1">
+                      <Label htmlFor="mfa">Authentication Code</Label>
                       <Input
-                        id="password"
-                        type={showPassword ? "text" : "password"}
-                        value={password}
+                        id="mfa"
+                        type="text"
+                        value={mfaToken}
                         disabled={!!loadingProvider}
-                        onChange={(e) => setPassword(e.target.value)}
-                        placeholder="••••••••"
+                        maxLength={6}
+                        onChange={(e) => setMfaToken(e.target.value)}
+                        placeholder="123456"
                       />
-                      <button type="button" disabled={!!loadingProvider} onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-4 flex items-center text-gray-400 hover:text-white">
-                        {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                      </button>
                     </div>
-                  </div>
+                  )}
 
-                  <Button type="submit" disabled={!!loadingProvider} isLoading={loadingProvider === 'password'}>
-                    Sign In
+                  <Button type="submit" disabled={!!loadingProvider} isLoading={loadingProvider === "password"}>
+                    {showMfaStep ? "Verify" : "Sign In"}
                   </Button>
                 </form>
 
-                <div className="flex items-center gap-3 my-6">
-                  <div className="h-px bg-white/20 flex-1" />
-                  <span className="text-gray-400 text-sm">or</span>
-                  <div className="h-px bg-white/20 flex-1" />
-                </div>
+                {!showMfaStep && (
+                  <>
+                    <div className="flex items-center gap-3 my-6">
+                      <div className="h-px bg-white/20 flex-1" />
+                      <span className="text-gray-400 text-sm">or</span>
+                      <div className="h-px bg-white/20 flex-1" />
+                    </div>
 
-                <div className="flex flex-col gap-3">
-                  <Button variant="oauth" onClick={() => handleOAuthSignIn("oauth_google")} disabled={!!loadingProvider} isLoading={loadingProvider === 'oauth_google'}>
-                    <GoogleIcon className="w-5 h-5" />
-                    <span>Continue with Google</span>
-                  </Button>
-                  <Button variant="oauth" onClick={() => handleOAuthSignIn("oauth_github")} disabled={!!loadingProvider} isLoading={loadingProvider === 'oauth_github'}>
-                    <GithubIcon className="w-5 h-5 text-white" />
-                    <span>Continue with GitHub</span>
-                  </Button>
-                </div>
-                
-                <p className="text-xs text-center text-gray-400 mt-6">
-                  Don’t have an account? <a href="/auth/sign-up" className="underline hover:text-white">Sign Up</a>
-                </p>
+                    <div className="flex flex-col gap-3">
+                      <Button variant="oauth" onClick={() => handleSocialLogin("google")} disabled={!!loadingProvider} isLoading={loadingProvider === "google"}>
+                        <GoogleIcon className="w-5 h-5" />
+                        <span>Continue with Google</span>
+                      </Button>
+                      <Button variant="oauth" onClick={() => handleSocialLogin("github")} disabled={!!loadingProvider} isLoading={loadingProvider === "github"}>
+                        <GithubIcon className="w-5 h-5 text-white" />
+                        <span>Continue with GitHub</span>
+                      </Button>
+                    </div>
+                  </>
+                )}
+
+                {!showMfaStep && (
+                  <p className="text-xs text-center text-gray-400 mt-6">
+                    Don’t have an account? <a href="/auth/sign-up" className="underline hover:text-white">Sign Up</a>
+                  </p>
+                )}
               </div>
             </div>
           </Card>
@@ -245,4 +307,3 @@ const CustomSignInModal = () => {
 };
 
 export default CustomSignInModal;
-

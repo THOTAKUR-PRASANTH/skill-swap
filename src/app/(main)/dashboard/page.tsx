@@ -1,10 +1,9 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useClerk } from "@clerk/nextjs";
 import { User, Mail, Phone, Shield, Home, LogOut, Clock, BarChart2 } from "lucide-react";
 
-import { useUserContext } from "@/lib/userContextProvider";
+import { useSession , signOut} from 'next-auth/react';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -15,9 +14,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import  MagicCard  from "@/components/ui/magic-card";
 
 export default function DashboardPage() {
-  const user = useUserContext();
+  const user = useSession().data?.user;
   const router = useRouter();
-  const { signOut } = useClerk();
+
 
   const recentActivity = [
     { text: "Logged in from Mumbai", time: "5:12 PM" },
@@ -46,7 +45,7 @@ export default function DashboardPage() {
           <h1 className="text-4xl font-extrabold text-white mb-2">Dashboard</h1>
           <p className="text-gray-300 text-lg">
             {/* --- Corrected the date --- */}
-            Welcome back, {user?.firstName || "..."}! It s Saturday, September 13th.
+            Welcome back, {user?.name || "..."}! It s Saturday, September 13th.
           </p>
         </div>
 
@@ -58,10 +57,9 @@ export default function DashboardPage() {
               <Skeleton className="w-28 h-28 rounded-full mb-4" />
             ) : (
             <Avatar className="w-24 h-24 mb-4">
-            <AvatarImage src={user.imageUrl || "/default-avatar.png"} alt="Profile" />
+            <AvatarImage src={user.image || "/default-avatar.png"} alt="Profile" />
             <AvatarFallback>
-              {user.firstName?.[0] || "U"}
-              {user.lastName?.[0] || ""}
+              {user.name?.[0] || "U"}
             </AvatarFallback>
             </Avatar>
             )}
@@ -69,7 +67,7 @@ export default function DashboardPage() {
               <Skeleton className="h-6 w-32 mb-2" />
             ) : (
               <h2 className="text-xl font-semibold text-white mb-1">
-                {user.firstName} {user.lastName || ""}
+                {user.name}
               </h2>
             )}
             {!user ? (
@@ -83,13 +81,13 @@ export default function DashboardPage() {
           <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
             {[
               { icon: Mail, title: "Email", value: user?.email || "Not available", color: "bg-blue-600" },
-              { icon: Phone, title: "Phone", value: user?.phoneNumber || "Not provided", color: "bg-green-600" },
+              { icon: Phone, title: "Phone",  value : "Not provided", color: "bg-green-600" },
               {
                 icon: Shield,
                 title: "Two-Factor Authentication",
-                value: user?.twoFactorEnabled ? "Enabled" : "Disabled",
+                value: 1 ? "Enabled" : "Disabled",
                 color: "bg-purple-600",
-                badge: user?.twoFactorEnabled ? "bg-green-500" : "bg-red-500",
+                badge: 1 ? "bg-green-500" : "bg-red-500",
               },
               { icon: User, title: "Account Status", value: "Active", color: "bg-orange-600", badge: "bg-green-500" },
             ].map(({ icon: Icon, title, value, color, badge }, i) => (
@@ -167,7 +165,7 @@ export default function DashboardPage() {
             <Home className="w-4 h-4 mr-2" />
             Back to Home
           </Button>
-          <Button variant="destructive" className="flex-1" onClick={() => signOut()}>
+          <Button variant="destructive" className="flex-1" onClick={() => {signOut();router.push("/");}}> 
             <LogOut className="w-4 h-4 mr-2" />
             Sign Out
           </Button>

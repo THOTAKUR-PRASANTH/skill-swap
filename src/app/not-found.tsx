@@ -1,6 +1,5 @@
 import { Footer, Navbar } from '@/components';
 import { Button } from "@/components/ui/button";
-import Link from 'next/link';
 
 const NotFound = () => {
     return (
@@ -19,16 +18,16 @@ const NotFound = () => {
                     </h1>
                     <p className="text-base text-neutral-400 font-medium mt-5 text-center mx-auto max-w-xl">
                         The page you are looking for does not exist. <br /> But don&apos;t worry, we&apos;ve got you covered. You can{" "}
-                        <Link href="/resources/help" className="text-foreground">
+                        <a href="/resources/help" className="text-foreground">
                             contact us
-                        </Link>
+                        </a>
                         .
                     </p>
-                    <Link href="/">
+                    <a href="/">
                         <Button className="mt-8">
                             Back to homepage
                         </Button>
-                    </Link>
+                    </a>
                 </div>
 
             </div>

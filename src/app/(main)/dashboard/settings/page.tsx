@@ -3,8 +3,8 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { User, Shield, Bell, Palette, Camera, Mail, KeyRound } from 'lucide-react';
-import { useUserContext } from "@/lib/userContextProvider";
 import Image from "next/image";
+import { useSession } from 'next-auth/react';
 
 // Define the settings sections
 const settingsSections = [
@@ -16,7 +16,7 @@ const settingsSections = [
 
 export default function SettingsPage() {
   const [activeSection, setActiveSection] = useState('Profile');
-  const user = useUserContext();
+  const user = useSession().data?.user;
 
   const renderSection = () => {
     switch (activeSection) {
@@ -118,7 +118,7 @@ const ProfileSection = ({ user }: { user: any }) => (
     <div className="p-8 space-y-6">
       <div className="flex items-center gap-6">
         <div className="relative">
-          <Image src={user?.imageUrl ?? ""} alt="Profile" width={80} height={80} className="w-20 h-20 rounded-full object-cover ring-2 ring-neutral-700" />
+          <Image src={user?.image ?? ""} alt="Profile" width={80} height={80} className="w-20 h-20 rounded-full object-cover ring-2 ring-neutral-700" />
           <button className="absolute bottom-0 right-0 p-2 bg-purple-500 rounded-full hover:bg-purple-600 transition-colors">
             <Camera className="w-4 h-4 text-white" />
           </button>
@@ -131,11 +131,11 @@ const ProfileSection = ({ user }: { user: any }) => (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           <label className="text-sm font-medium text-neutral-300">First Name</label>
-          <input type="text" defaultValue={user?.firstName} className="mt-1 w-full p-3 bg-neutral-800/50 rounded-lg border border-neutral-700 focus:ring-2 focus:ring-purple-500 focus:outline-none transition" />
+          <input type="text" defaultValue={user?.name} className="mt-1 w-full p-3 bg-neutral-800/50 rounded-lg border border-neutral-700 focus:ring-2 focus:ring-purple-500 focus:outline-none transition" />
         </div>
         <div>
           <label className="text-sm font-medium text-neutral-300">Last Name</label>
-          <input type="text" defaultValue={user?.lastName} className="mt-1 w-full p-3 bg-neutral-800/50 rounded-lg border border-neutral-700 focus:ring-2 focus:ring-purple-500 focus:outline-none transition" />
+          <input type="text" defaultValue={""} className="mt-1 w-full p-3 bg-neutral-800/50 rounded-lg border border-neutral-700 focus:ring-2 focus:ring-purple-500 focus:outline-none transition" />
         </div>
       </div>
     </div>

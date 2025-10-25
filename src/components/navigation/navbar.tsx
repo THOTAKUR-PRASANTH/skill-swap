@@ -11,17 +11,18 @@ import {
     navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
 import { cn, NAV_LINKS } from "@/utils";
-import { useClerk } from "@clerk/nextjs";
+
 import { LucideIcon, ZapIcon } from "lucide-react";
 import Link from "next/link";
 import React, { useEffect, useState } from 'react';
 import MaxWidthWrapper from "../global/max-width-wrapper";
 import MobileNavbar from "./mobile-navbar";
 import AnimationContainer from "../global/animation-container";
+import { useSession } from "next-auth/react";
 
 const Navbar = () => {
 
-    const { user } = useClerk();
+    const  user  =  useSession().data?.user;
 
     const [scroll, setScroll] = useState(false);
 
@@ -48,11 +49,11 @@ const Navbar = () => {
             <AnimationContainer reverse delay={0.1} className="size-full">
                 <MaxWidthWrapper className="flex items-center justify-between">
                     <div className="flex items-center space-x-12">
-                        <Link href="/">
+                        <a href="/">
                             <span className="text-lg font-bold font-heading !leading-none">
                                 SkillSWap
                             </span>
-                        </Link>
+                        </a>
 
                         <NavigationMenu className="hidden lg:flex">
                             <NavigationMenuList>

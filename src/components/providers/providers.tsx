@@ -1,23 +1,27 @@
 "use client";
 
 import React from 'react'
-import { ClerkProvider } from '@clerk/nextjs'
+import {AuthProvider} from '@/components';
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
 
 interface Props {
     children: React.ReactNode;
+    session: any;
 }
 
-const Providers = ({ children }: Props) => {
+const Providers = ({ children ,session}: Props) => {
 
     const client = new QueryClient();
 
     return (
+  
         <QueryClientProvider client={client}>
-            <ClerkProvider>
+           <AuthProvider session={session}>
                 {children}
-            </ClerkProvider>
+            </ AuthProvider>  
         </QueryClientProvider>
+      
     )
 };
 

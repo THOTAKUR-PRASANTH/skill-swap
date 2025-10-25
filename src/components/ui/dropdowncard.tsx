@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Link from 'next/link';
 import {
   Settings,
   LogOut,
@@ -15,7 +16,7 @@ import {
   LifeBuoy,                 // Icon for Help
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useClerk } from "@clerk/nextjs";
+import { signOut } from 'next-auth/react';
 import { useRouter } from "next/navigation";
 
 // --- Reusable Glowing Sparkle using the Sparkles Icon ---
@@ -146,7 +147,6 @@ export default function DropdownCard(props: {
   profileMenuOpen: boolean;
   user: any;
 }) {
-  const { signOut: signout } = useClerk();
   const router = useRouter();
   const { profileMenuOpen, user } = props;
 
@@ -246,7 +246,7 @@ export default function DropdownCard(props: {
 
             {/* Menu Actions */}
             <div className="mt-5 space-y-1">
-              <a
+              <Link
                 href="/dashboard/settings"
                 className="flex items-center justify-between w-full px-3 py-2 rounded-lg hover:bg-white/10 transition-colors cursor-pointer"
               >
@@ -257,10 +257,10 @@ export default function DropdownCard(props: {
                   </p>
                 </div>
                 <ChevronRight className="w-4 h-4 text-neutral-600" />
-              </a>
+              </Link>
 
               {/* NEW CONTENT TO LENGTHEN CARD */}
-              <a
+              <Link
                 href="/dashboard/billing"
                 className="flex items-center justify-between w-full px-3 py-2 rounded-lg hover:bg-white/10 transition-colors cursor-pointer"
               >
@@ -271,8 +271,8 @@ export default function DropdownCard(props: {
                   </p>
                 </div>
                 <ChevronRight className="w-4 h-4 text-neutral-600" />
-              </a>
-              <a
+              </Link>
+              <Link
                 href="/support"
                 className="flex items-center justify-between w-full px-3 py-2 rounded-lg hover:bg-white/10 transition-colors cursor-pointer"
               >
@@ -281,12 +281,12 @@ export default function DropdownCard(props: {
                   <p className="font-medium text-neutral-200">Help & Support</p>
                 </div>
                 <ChevronRight className="w-4 h-4 text-neutral-600" />
-              </a>
+              </Link>
 
               {/* SIGN OUT (USUALLY LAST) */}
               <div
                 onClick={() => {
-                  signout();
+                  signOut();
                   router.push("/");
                 }}
                 className="flex items-center justify-between w-full px-3 py-2 rounded-lg hover:bg-white/10 transition-colors cursor-pointer"

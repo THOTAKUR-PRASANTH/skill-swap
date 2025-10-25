@@ -1,25 +1,15 @@
 import { Metadata } from "next";
 
 export const generateMetadata = ({
-    title = `${process.env.NEXT_PUBLIC_APP_NAME} - `,
-    description = `${process.env.NEXT_PUBLIC_APP_NAME} is the link management platform for businesses. It helps you build, brand, and track your links.`,
-    image = "/thumbnail.png",
-    icons = [
-        {
-            rel: "apple-touch-icon",
-            sizes: "32x32",
-            url: "/apple-touch-icon.png"
-        },
-        {
-            rel: "icon",
-            sizes: "32x32",
-            url: "/favicon-32x32.png"
-        },
-        {
-            rel: "icon",
-            sizes: "16x16",
-            url: "/favicon-16x16.png"
-        },
+    title = `${process.env.NEXT_PUBLIC_APP_NAME}  `,
+    description = `${process.env.NEXT_PUBLIC_APP_NAME} enjoy the connections`,
+    image = "/logo1.png",
+   icons = [
+        { rel: "icon", sizes: "100x100", url: "/favicon-16x16.png" },
+        { rel: "icon", sizes: "32x32", url: "/favicon-16x16.png" },
+        { rel: "icon", sizes: "64x64", url: "/favicon-16x16.png" },
+        { rel: "icon", sizes: "128x128", url: "/favicon-16x16.png" },
+        { rel: "icon", sizes: "256x256", url: "/favicon-16x16.png" },
     ],
     noIndex = false
 }: {
@@ -41,8 +31,7 @@ export const generateMetadata = ({
         title,
         description,
         ...(image && { card: "summary_large_image", images: [image] }),
-        creator: "@shreyassihasane",
+        creator: "@Prashanth_chowdari",
     },
-    // metadataBase: new URL(process.env.APP_DOMAIN!),
     ...(noIndex && { robots: { index: false, follow: false } }),
 });

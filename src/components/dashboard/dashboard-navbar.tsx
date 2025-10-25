@@ -1,26 +1,27 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, use } from "react";
 import { motion } from "framer-motion";
 import { Bell, ChevronDown, Menu, Search } from "lucide-react";
-import { useUserContext } from "@/lib/userContextProvider";
 import Image from "next/image";
 import { cn } from "@/utils/functions/cn";
 import DropdownCard from "../ui/dropdowncard";
 import { SearchCommandMenu } from "@/components";
+import { useSession } from "next-auth/react";
 
 export default function DashboardNavbar({
-  onOpenSidebar,
+  onToggleSidebar,
   isScrolled,
 }: {
-  onOpenSidebar: () => void;
+   onToggleSidebar: () => void;
   isScrolled: boolean;
 }) {
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [isSearchMenuOpen, setIsSearchMenuOpen] = useState(false);
 
+
   const profileMenuRef = useRef<HTMLDivElement>(null);
-  const user = useUserContext();
+  const user = useSession().data?.user;
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -38,9 +39,6 @@ export default function DashboardNavbar({
     className={cn(
         "sticky top-0 pt-0.5 pb-1.5 inset-x-0 h-20 w-full z-40 flex items-center justify-between px-4 md:px-8 select-none transition-all duration-300",
         isScrolled
-            // V-- THE FIX IS HERE --V
-            // I've made the background much more transparent (from 50% to 20%)
-            // and reduced the blur to be much lighter (from 2xl to sm).
             ? "border-b border-neutral-800 bg-neutral-950/20 backdrop-blur-sm shadow-lg shadow-black/20"
             : "border-b border-transparent bg-neutral-950"
     )}
@@ -51,17 +49,14 @@ export default function DashboardNavbar({
         <div className="flex items-center gap-4">
           <motion.button
             whileTap={{ scale: 0.95 }}
-            onClick={onOpenSidebar}
+            onClick={onToggleSidebar}
             className="lg:hidden p-2 rounded-full text-neutral-300 hover:bg-neutral-800"
           >
             <Menu className="w-6 h-6" />
           </motion.button>
         </div>
-
-        {/* Right Section */}
         <div className="flex items-center gap-2">
           
-          {/* --- UPDATED: Premium Glowing Sparkle Button (Desktop) --- */}
           <button
             onClick={() => setIsSearchMenuOpen(true)}
             className="group hidden md:flex relative items-center justify-center h-9 px-4 overflow-hidden rounded-full bg-neutral-950"
@@ -76,7 +71,7 @@ export default function DashboardNavbar({
             </div>
           </button>
 
-          {/* --- UPDATED: Premium Glowing Sparkle Button (Mobile) --- */}
+      
           <button
             onClick={() => setIsSearchMenuOpen(true)}
             className="group md:hidden flex relative items-center justify-center h-10 w-10 overflow-hidden rounded-full bg-neutral-950"
@@ -90,7 +85,7 @@ export default function DashboardNavbar({
             </div>
           </button>
 
-          {/* Notifications */}
+    
           <motion.button className="relative p-2.5 rounded-full text-neutral-300 hover:bg-neutral-800">
             <div className="absolute -top-1 -right-1 w-6 h-6 bg-red-500 rounded-full animate-ping opacity-30"></div>
             <Bell className="w-5 h-5" />
@@ -111,7 +106,7 @@ export default function DashboardNavbar({
             >
               <div className="relative flex-shrink-0">
                 <Image
-                  src={user?.imageUrl ?? ""}
+                  src={user?.image ?? ""}
                   alt="Profile"
                   width={36}
                   height={36}
@@ -120,7 +115,7 @@ export default function DashboardNavbar({
                 <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-neutral-900 rounded-full"></span>
               </div>
               <div className="hidden md:flex items-center gap-1 pr-2">
-                <p className="text-sm font-medium text-neutral-200">{user?.firstName}</p>
+                <p className="text-sm font-medium text-neutral-200">{user?.name}</p>
                 <ChevronDown
                   className={`w-4 h-4 text-neutral-500 transition-transform duration-300 ${
                     profileMenuOpen ? "rotate-180" : ""
