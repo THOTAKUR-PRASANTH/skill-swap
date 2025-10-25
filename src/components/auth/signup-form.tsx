@@ -170,12 +170,7 @@ const CustomSignUpPage = () => {
         transition={{ duration: 0.4, ease: "easeOut" }}
       >
         <Card>
-          <button
-            onClick={() => router.push("/login")}
-            className="absolute top-6 left-6 flex items-center gap-2 text-sm text-gray-400 hover:text-white transition z-20"
-          >
-            <ArrowLeft className="w-4 h-4" /> Back to Sign In
-          </button>
+         
 
           <div className="grid md:grid-cols-2 gap-8 md:gap-16 items-center">
             {/* --- DESKTOP LOTTIE --- */}
