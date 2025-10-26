@@ -29,6 +29,8 @@ import Blogs from "./blog/blogs";
 import AuthProvider from "./auth/AuthProvider";
 import MfaSetup from "./auth/MfaSetup";
 
+import AnimatedUserProfile from "./ui/animated-user-profile";
+
 
 
 
@@ -57,4 +59,5 @@ export {
     PricingCards,
 
     Blogs,
+    AnimatedUserProfile,
 };

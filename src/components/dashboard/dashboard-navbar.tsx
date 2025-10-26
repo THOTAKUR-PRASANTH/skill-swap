@@ -8,6 +8,7 @@ import { cn } from "@/utils/functions/cn";
 import DropdownCard from "../ui/dropdowncard";
 import { SearchCommandMenu } from "@/components";
 import { useSession } from "next-auth/react";
+import AnimatedUserProfile from "../ui/animated-user-profile";
 
 export default function DashboardNavbar({
   onToggleSidebar,
@@ -105,13 +106,16 @@ export default function DashboardNavbar({
               className="flex items-center gap-2 rounded-full hover:bg-neutral-800 transition-all duration-200 p-1"
             >
               <div className="relative flex-shrink-0">
+               user?.image && (
                 <Image
-                  src={user?.image ?? ""}
+                  src={user?.image  || ""}
                   alt="Profile"
                   width={36}
                   height={36}
                   className="w-9 h-9 rounded-full object-cover ring-1 ring-neutral-700"
-                />
+                />):(
+                  <AnimatedUserProfile />
+                )
                 <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-neutral-900 rounded-full"></span>
               </div>
               <div className="hidden md:flex items-center gap-1 pr-2">
