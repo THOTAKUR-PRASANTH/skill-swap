@@ -155,13 +155,13 @@ const CustomSignInModal = () => {
                   {showMfaStep ? "Enter 2FA Code 🔑" : (
                     <motion.div className="flex justify-center"
                       initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.8 }}>
-                      <DynamicPlayer autoplay loop src="/animations/welcome.json" style={{ width: "100%", maxWidth: "300px", height: "auto" }} />
+                      <DynamicPlayer autoplay loop src="/animations/greeatings.json" style={{ width: "100%", maxWidth: "300px", height: "auto" }} />
                     </motion.div>
                   )}
                 </h2>
                 {!showMfaStep && (
                   <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.8, ease: "easeOut" }}>
-                    <DynamicPlayer autoplay loop src="/animations/register.json" style={{ width: "100%", maxWidth: "400px", height: "auto" }} />
+                    <DynamicPlayer autoplay loop src="/animations/register.json" style={{ width: "110%", maxWidth: "500px", height: "auto" }} />
                   </motion.div>
                 )}
               </div>
@@ -173,7 +173,7 @@ const CustomSignInModal = () => {
                 {!showMfaStep && (
                   <motion.div className="md:hidden flex justify-center mb-4"
                     initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.8 }}>
-                    <DynamicPlayer autoplay loop src="/animations/welcome.json" style={{ width: "100%", maxWidth: "300px", height: "auto" }} />
+                    <DynamicPlayer autoplay loop src="/animations/greeatings.json" style={{ width: "100%", maxWidth: "300px", height: "auto" }} />
                   </motion.div>
                 )}
 
