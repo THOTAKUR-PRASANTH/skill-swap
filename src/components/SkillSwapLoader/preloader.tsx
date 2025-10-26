@@ -1,14 +1,15 @@
 'use client';
 
-import { useMemo } from "react";
-import { Player } from '@lottiefiles/react-lottie-player';
+import dynamic from "next/dynamic";
 import { motion } from "framer-motion";
 
 export default function PreLoader() {
-  const LottiePlayer = useMemo(() => (
-    <Player autoplay loop src="/animations/loader.json" style={{ width: '200px', height: '200px' }} />
-  ), []);
 
+   const DynamicPlayer = dynamic(
+      () => import("@lottiefiles/react-lottie-player").then(mod => mod.Player),
+      { ssr: false }
+    );
+    
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-transparent text-gray-200 px-4">
       <motion.div
@@ -16,7 +17,7 @@ export default function PreLoader() {
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.8, ease: "easeOut" }}
       >
-        {LottiePlayer}
+        <DynamicPlayer autoplay loop src="/animations/loader.json" style={{ width: "100%", maxWidth: "300px", height: "auto" }} />
       </motion.div>
 
       <motion.p
