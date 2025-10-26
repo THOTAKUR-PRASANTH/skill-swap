@@ -118,7 +118,7 @@ const ProfileSection = ({ user }: { user: any }) => (
     <div className="p-8 space-y-6">
       <div className="flex items-center gap-6">
         <div className="relative">
-          <Image src={user?.image ?? ""} alt="Profile" width={80} height={80} className="w-20 h-20 rounded-full object-cover ring-2 ring-neutral-700" />
+          <Image src={user?.image ?? "/image.png"} alt="Profile" width={80} height={80} className="w-20 h-20 rounded-full object-cover ring-2 ring-neutral-700" />
           <button className="absolute bottom-0 right-0 p-2 bg-purple-500 rounded-full hover:bg-purple-600 transition-colors">
             <Camera className="w-4 h-4 text-white" />
           </button>

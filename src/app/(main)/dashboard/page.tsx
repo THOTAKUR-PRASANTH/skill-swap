@@ -57,10 +57,7 @@ export default function DashboardPage() {
               <Skeleton className="w-28 h-28 rounded-full mb-4" />
             ) : (
             <Avatar className="w-24 h-24 mb-4">
-            <AvatarImage src={user.image || "/default-avatar.png"} alt="Profile" />
-            <AvatarFallback>
-              {user.name?.[0] || "U"}
-            </AvatarFallback>
+            <AvatarImage src={user.image || "/logo.png"} alt="Profile" />
             </Avatar>
             )}
             {!user ? (

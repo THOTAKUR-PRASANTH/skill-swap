@@ -20,6 +20,7 @@ import { useSidebar } from "@/app/context/SidebarContext";
 
 
 
+
 function Sidebar() {
   const router = useRouter();
   const pathname = usePathname();
@@ -123,13 +124,17 @@ function Sidebar() {
             href="/dashboard/settings"
             className="flex items-center gap-3 p-2 rounded-lg hover:bg-neutral-800 transition-colors group"
           >
-            <Image
-              src={user?.image ?? "/default-avatar.png"}
+
+         
+             <Image
+              src={user?.image || "/image.png"}
               alt="Profile"
               width={40}
               height={40}
               className="w-10 h-10 rounded-full object-cover ring-2 ring-neutral-700"
             />
+           
+
             <div className="min-w-0">
               <p className="text-sm font-semibold text-neutral-200 truncate">
                 {user?.name}
@@ -276,13 +281,15 @@ export default function DesktopSidebar({ sidebarOpen }: DesktopSidebarProps) {
             className="flex items-center gap-3 p-2 rounded-lg hover:bg-neutral-800 transition-colors group"
             title={isCollapsed ? "Profile & Settings" : undefined}
           >
-            <Image
-              src={user?.image ?? "/default-avatar.png"}
+          
+             <Image
+              src={user?.image ?? "/image.png"}
               alt="Profile"
               width={40}
               height={40}
               className="w-9 h-9 rounded-full object-cover ring-2 ring-neutral-700 flex-shrink-0"
             />
+           
             {!isCollapsed && (
               <div className="min-w-0">
                 <p className="text-sm font-semibold text-neutral-200 truncate">{user?.name}</p>
