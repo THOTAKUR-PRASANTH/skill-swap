@@ -100,7 +100,7 @@ export default async function ChatPage({ params }: ChatPageProps) {
 
 
    
-        <ChatHeader otherUser={otherParticipant}/>
+        <ChatHeader otherUser={otherParticipant || null} />
     
 
       {/* MessageList Component (We will build this next)

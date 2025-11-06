@@ -97,7 +97,7 @@ export const useChatRooms = () => {
                     transition={{ duration: 0.3, ease: "easeOut" }}
                     onClick={() => {
                       router.push(`/chat/${roomId}`);
-                      toast.dismiss(t.id);
+                      toast.dismiss(t);
                     }}
                     // This is your custom card style
                     className={`relative flex flex-row items-center gap-2 
