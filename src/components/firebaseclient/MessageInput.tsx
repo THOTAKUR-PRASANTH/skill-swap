@@ -55,7 +55,7 @@ export function MessageInput({ roomId }: MessageInputProps) {
 
     startTransition(async () => {
       try {
-        const result = await sendMessage(roomId, text, pendingFile);
+        const result = await sendMessage(roomId, text);
 
         if (result?.error) {
           toast.error(result.error);
