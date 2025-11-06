@@ -21,6 +21,6 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "src/components/SkillSwapLoader/preloader.tsx"],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "src/components/SkillSwapLoader/preloader.tsx", "src/components/notificationPusher/PushNotificationManager.tsx"],
   "exclude": ["node_modules"]
 }

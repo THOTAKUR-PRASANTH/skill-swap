@@ -9,6 +9,8 @@ import DropdownCard from "../ui/dropdowncard";
 import { SearchCommandMenu } from "@/components";
 import { useSession } from "next-auth/react";
 
+
+
 export default function DashboardNavbar({
   onToggleSidebar,
   isScrolled,
@@ -18,10 +20,11 @@ export default function DashboardNavbar({
 }) {
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [isSearchMenuOpen, setIsSearchMenuOpen] = useState(false);
-
-
   const profileMenuRef = useRef<HTMLDivElement>(null);
-  const user = useSession().data?.user;
+  const { data: session } = useSession();
+  const user = session?.user;
+  const isOnline = user?.id === session?.user?.id;
+
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -112,8 +115,12 @@ export default function DashboardNavbar({
                         height={36}
                         className="w-9 h-9 rounded-full object-cover ring-1 ring-neutral-700"
                       />
-
-                <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-neutral-900 rounded-full"></span>
+                  {isOnline ?(
+                    <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-neutral-900 rounded-full"></span>
+                  ):(
+                    <span className="absolute bottom-0 right-0 w-3 h-3 bg-orange-500 border-2 border-neutral-900 rounded-full"></span>
+                  )}
+                
               </div>
               <div className="hidden md:flex items-center gap-1 pr-2">
                 <p className="text-sm font-medium text-neutral-200">{user?.name}</p>

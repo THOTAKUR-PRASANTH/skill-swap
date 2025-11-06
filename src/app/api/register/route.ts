@@ -1,4 +1,3 @@
-// src/app/api/register/route.ts
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import { NextResponse } from 'next/server';
@@ -13,6 +12,27 @@ const userSchema = z.object({
   email: z.string().email({ message: "Invalid email address" }),
   password: z.string().min(6, { message: "Password must be at least 6 characters long" }),
 });
+
+// 👇 --- ADDED YOUR LIST OF ICONS HERE --- 👇
+const profileIcons = [
+  'https://ik.imagekit.io/jt0unlio3s/smiling_face_with_heart-eyes_3d.png?updatedAt=1761984706574',
+  'https://ik.imagekit.io/jt0unlio3s/54-smiling-face-with-smiling-eyes-3d-emoji.png?updatedAt=1761984706571',
+  'https://ik.imagekit.io/jt0unlio3s/star-struck_3d.png?updatedAt=1761984706530',
+  'https://ik.imagekit.io/jt0unlio3s/winking_face_3d.png?updatedAt=1761984706513',
+  'https://ik.imagekit.io/jt0unlio3s/62-slightly-smiling-face-3d-emoji.png?updatedAt=1761984706479',
+  'https://ik.imagekit.io/jt0unlio3s/beaming_face_with_smiling_eyes_3d.png?updatedAt=1761984706448',
+  'https://ik.imagekit.io/jt0unlio3s/cat_with_tears_of_joy_3d.png?updatedAt=1761984706424',
+  'https://ik.imagekit.io/jt0unlio3s/smiling_face_with_smiling_eyes_3d.png?updatedAt=1761984706397',
+  'https://ik.imagekit.io/jt0unlio3s/winking_face_with_tongue_3d.png?updatedAt=1761984706379',
+  'https://ik.imagekit.io/jt0unlio3s/57-hugging-face-3d-emoji.png?updatedAt=1761984706386',
+  'https://ik.imagekit.io/jt0unlio3s/11-smiling-face-with-sunglasses-3d-emoji.png?updatedAt=1761984706377',
+  'https://ik.imagekit.io/jt0unlio3s/50-smiling-face-with-hearts-3d-emoji.png?updatedAt=1761984706327',
+  'https://ik.imagekit.io/jt0unlio3s/nerd_face_3d.png?updatedAt=1761984706212',
+  'https://ik.imagekit.io/jt0unlio3s/smiling_face_with_hearts_3d.png?updatedAt=1761984706096',
+  'https://ik.imagekit.io/jt0unlio3s/17-winking-face-with-tongue-3d-emoji.png?updatedAt=1761984705776',
+  'https://ik.imagekit.io/jt0unlio3s/usericon.svg?updatedAt=1756536633173'
+];
+// 👆 --- END OF ICON LIST --- 👆
 
 export async function POST(request: Request) {
   try {
@@ -33,8 +53,18 @@ export async function POST(request: Request) {
 
     const hashedPassword = await bcrypt.hash(password, 12);
 
+    // 👇 --- PICK A RANDOM ICON --- 👇
+    const randomIndex = Math.floor(Math.random() * profileIcons.length);
+    const randomProfileIcon = profileIcons[randomIndex];
+    // 👆 --- END OF RANDOM ICON LOGIC --- 👆
+
     const newUser = await prisma.user.create({
-      data: { name, email, hashedPassword },
+      data: {
+        name,
+        email,
+        hashedPassword,
+        image: randomProfileIcon, // 👇 --- ASSIGN THE RANDOM ICON HERE --- 👇
+      },
     });
 
     // 👇 --- NEW VERIFICATION LOGIC STARTS HERE --- 👇

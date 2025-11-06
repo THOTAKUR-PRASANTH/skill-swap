@@ -97,9 +97,13 @@ const CustomSignInModal = () => {
       if (result.error === "MFA") setShowMfaStep(true);
       else if (result.error === "OAuthAccount") toast.error("Use Google or GitHub to sign in.");
       else toast.error("Invalid credentials.");
-    } else router.push("/dashboard");
+    } else {
+     
+      router.push("/dashboard");
+    }
     setLoadingProvider(null);
   };
+
   const handleSocialLogin = async (provider: string) => {
     setLoadingProvider(provider);
     try {
@@ -110,6 +114,7 @@ const CustomSignInModal = () => {
       setLoadingProvider(null);
     }
   };
+
    const DynamicPlayer = dynamic(
     () => import("@lottiefiles/react-lottie-player").then(mod => mod.Player),
     { ssr: false }

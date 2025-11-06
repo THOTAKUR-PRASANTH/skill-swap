@@ -77,9 +77,14 @@
   color: hsl(var(--foreground));
 }
 
+
 html, body {
+  overscroll-behavior: none;
+  touch-action: none;
   font-family: "Inter", sans-serif !important;
+ 
 }
+
 
 .dumy {
   color: hsl(0 0% 98%);

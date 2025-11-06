@@ -25,7 +25,7 @@ export default async function RootLayout({
           inter.variable
         )}
       >
-
+       
        <TopLoader />
        <SidebarProvider>
         <LoaderProvider>
