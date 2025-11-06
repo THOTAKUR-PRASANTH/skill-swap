@@ -67,7 +67,16 @@ export function UserSearch() {
   const handleStartChat = async (otherUserId: string) => {
     startTransition(async () => {
       try {
-        const { roomId } = await createOrGetChatRoom(otherUserId);
+        // createOrGetChatRoom may be typed as void; assert the expected shape and handle missing values
+        const result = (await createOrGetChatRoom(otherUserId)) as
+          | { roomId: string }
+          | string
+          | null
+          | undefined;
+        const roomId = typeof result === "string" ? result : result?.roomId;
+        if (!roomId) {
+          throw new Error("No roomId returned from server action.");
+        }
         
         // On success, redirect to the new chat room page
         // We will build this page in the next step
